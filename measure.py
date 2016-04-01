@@ -27,14 +27,20 @@ def setup(extra_args = []):
     except:
         pass
     os.mkdir('build')
-    subprocess.check_call([meson, 'build', '--default-library=static'] + extra_args,
+    subprocess.check_call([meson, 'build'] + extra_args,
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
 
-def compile():
+def compile(pgo):
     subprocess.check_call(['ninja', '-C', 'build', '-v'],
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
+    if pgo:
+        subprocess.check_call('zpipe < {} > /dev/null'.format(train_data), shell=True, cwd='build')
+        subprocess.check_call([mesonconf, 'build', '-Db_pgo=use'])
+        subprocess.check_call(['ninja', '-C', 'build', '-v'],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
 
 def measure():
     times = []
@@ -45,17 +51,17 @@ def measure():
         times.append(end - start)
     return min(times)
 
-def measure_buildtypes():
-    compile()
+def measure_buildtypes(setup_args, pgo=False):
+    setup(setup_args)
+    compile(pgo)
     debug_t = 1#measure()
     print('Debug took:', debug_t)
-    time.sleep(1)
-    subprocess.check_call([mesonconf, 'build', '-Dbuildtype=debugoptimized'])
-    compile()
+    setup(setup_args + ['-Dbuildtype=debugoptimized'])
+    compile(pgo)
     dopt_t = measure()
     print('Debugopt took:', dopt_t)
-    subprocess.check_call([mesonconf, 'build', '-Dbuildtype=release'])
-    compile()
+    setup(setup_args + ['-Dbuildtype=release'])
+    compile(pgo)
     rel_t = measure()
     print('Release took:', rel_t)
 
@@ -63,10 +69,11 @@ if __name__ == '__main__':
     if not os.path.exists('meson.build'):
         print('Run this script at the top of the source tree.')
         sys.exit(1)
-    setup()
-    print('Basic optimizations')
-    measure_buildtypes()
-    print('Using lto')
-    setup(['-Db_lto=true'])
-    measure_buildtypes()
-
+    print('Basic optimizations, shared library')
+    measure_buildtypes([])
+    print('\nBasic optimizations, static library')
+    measure_buildtypes(['--default-library=static'])
+    print('\nUsing lto, static')
+    measure_buildtypes(['--default-library=static', '-Db_lto=true'])
+    print('\nUsing pgo, static')
+    measure_buildtypes(['--default-library=static', '-Db_pgo=generate'], True)
