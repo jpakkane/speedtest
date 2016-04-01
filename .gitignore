@@ -2,4 +2,6 @@
 /build
 /subprojects/packagecache
 /subprojects/zlib-1.2.8
+/testdata
+/traindata
 
