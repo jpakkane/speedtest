@@ -7,7 +7,7 @@ import os, sys, subprocess, shutil, time
 # If your system static linker does not support lto you may
 # need to run like this:
 #
-# AR=gcc-ar ./measure.py
+# AR=gcc-ar CC=gcc ./measure.py
 
 # This script is tuned to my development machine, where
 # Meson binaries are not in the path. If you wish to run this
