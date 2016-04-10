@@ -13,8 +13,8 @@ import os, sys, subprocess, shutil, time
 # Meson binaries are not in the path. If you wish to run this
 # yourself, update these.
 
-meson = '/home/jpakkane/workspace/meson/meson.py'
-mesonconf = '/home/jpakkane/workspace/meson/mesonconf.py'
+meson = '/home/jpakkane/meson/meson.py'
+mesonconf = '/home/jpakkane/meson/mesonconf.py'
 
 # In our test: swift-2.2-SNAPSHOT-2015-12-01-b-ubuntu15.10.tar
 test_data = os.path.join(os.getcwd(), 'testdata')
@@ -44,7 +44,7 @@ def compile(pgo):
 
 def measure():
     times = []
-    for _ in range(1):
+    for _ in range(5):
         start = time.time()
         subprocess.check_call('build/zpipe < {} > /dev/null'.format(test_data), shell=True)
         end = time.time()
@@ -52,15 +52,11 @@ def measure():
     return min(times)
 
 def measure_buildtypes(setup_args, pgo=False):
-    setup(setup_args)
-    compile(pgo)
-    debug_t = 1#measure()
-    print('Debug took:', debug_t)
-    setup(setup_args + ['-Dbuildtype=debugoptimized'])
+    setup(setup_args + ['--buildtype=debugoptimized'])
     compile(pgo)
     dopt_t = measure()
     print('Debugopt took:', dopt_t)
-    setup(setup_args + ['-Dbuildtype=release'])
+    setup(setup_args + ['--buildtype=release'])
     compile(pgo)
     rel_t = measure()
     print('Release took:', rel_t)
@@ -77,3 +73,5 @@ if __name__ == '__main__':
     measure_buildtypes(['--default-library=static', '-Db_lto=true'])
     print('\nUsing pgo, static')
     measure_buildtypes(['--default-library=static', '-Db_pgo=generate'], True)
+    print('\nUsing lto and pgo, static')
+    measure_buildtypes(['--default-library=static', '-Db_lto=true', '-Db_pgo=generate'], True)
