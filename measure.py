@@ -13,8 +13,12 @@ import os, sys, subprocess, shutil, time
 # Meson binaries are not in the path. If you wish to run this
 # yourself, update these.
 
-meson = '/home/jpakkane/meson/meson.py'
-mesonconf = '/home/jpakkane/meson/mesonconf.py'
+if os.path.exists('/home/jpakkane/meson/meson.py'):
+    meson = '/home/jpakkane/meson/meson.py'
+    mesonconf = '/home/jpakkane/meson/mesonconf.py'
+else:
+    meson = '/home/jpakkane/workspace/meson/meson.py'
+    mesonconf = '/home/jpakkane/workspace/meson/mesonconf.py'
 
 # In our test: swift-2.2-SNAPSHOT-2015-12-01-b-ubuntu15.10.tar
 test_data = os.path.join(os.getcwd(), 'testdata')
